@@ -1,0 +1,11 @@
+[out:json][timeout:25];
+
+{{geocodeArea:Minneapolis}}->.searchArea;
+
+way["highway"]["name"="North Newton Avenue"](area.searchArea)->.w1;
+way["highway"]["name"="North 36th Avenue"](area.searchArea)->.w2;
+
+node(w.w1)(w.w2)->.intersection;
+
+(.intersection;);
+out meta;

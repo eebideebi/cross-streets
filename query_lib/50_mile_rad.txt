@@ -1,0 +1,15 @@
+[out:json][timeout:50];
+
+// Center of Minneapolis
+node["name"="Minneapolis"]["place"="city"]->.center;
+
+// Define search radius in meters (50 miles ≈ 80467 m)
+way["highway"]["name"="North Newton Avenue"](around.center:80467)->.w1;
+way["highway"]["name"="North 36th Avenue"](around.center:80467)->.w2;
+
+// Directly find nodes that belong to both ways (intersections)
+node(w.w1)(w.w2)->.intersection;
+
+// Output
+.intersection;
+out meta;

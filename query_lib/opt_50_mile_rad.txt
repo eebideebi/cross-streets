@@ -1,0 +1,18 @@
+[out:json][timeout:50];
+
+// Get the center of Minneapolis
+node["name"="Minneapolis"]["place"="city"]->.center;
+
+// Define radius in meters (~50 miles)
+{{radius:=80467}}
+
+// Find ways within 50 miles of Minneapolis center
+way(around.center:80467)["highway"]["name"="North Newton Avenue"]->.w1;
+way(around.center:80467)["highway"]["name"="North 36th Avenue"]->.w2;
+
+// Find intersection nodes between these two way sets
+node(w.w1)(w.w2)->.intersection;
+
+// Output
+.intersection;
+out meta;
