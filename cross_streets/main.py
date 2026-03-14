@@ -5,11 +5,11 @@ class Location(BaseModel):
     longitude: float
 
 class CrossStreets:
-    def __init__():
-        print(running init)
-    def geocode(raw_intersection:str)->Location:
-        return Location(1, 1)
+    def __init__(self):
+        print("running init")
+    def geocode(self, raw_intersection:str)->Location:
+        return Location(latitude=1, longitude=1)
 
 if __name__ == "__main__":
     cs = CrossStreets()
-    print(geocode('test'))
+    print(cs.geocode('test'))
