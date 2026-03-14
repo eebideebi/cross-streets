@@ -13,9 +13,10 @@ class Location(BaseModel):
 class CrossStreets:
     def __init__(
         self,
-        searchArea:str = 'area(3600136712)' # geocodeArea:Minneapolis
+        searchArea:str = 'area(3600136712)', # geocodeArea:Minneapolis
+        overpass_endpoint:str|None = None
     ):
-        self.overpass = Overpass()
+        self.overpass = Overpass(endpoint=overpass_endpoint) if overpass_endpoint else Overpass()
         self.searchArea = searchArea
 
     def geocode(self, raw:str)->Result[Location]:
