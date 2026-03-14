@@ -1,3 +1,9 @@
+# OSMPythonTools
+cache/
+
+# Vs Codespaces
+*.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
