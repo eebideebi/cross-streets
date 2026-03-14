@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from OSMPythonTools.overpass import Overpass
+from error_handeling import Result, Ok, Err 
 
 # --- Types ---
 
@@ -17,11 +18,11 @@ class CrossStreets:
         self.overpass = Overpass()
         self.searchArea = searchArea
 
-    def geocode(self, raw:str)->Location|None:
+    def geocode(self, raw:str)->Result[Location]:
         street_1, street_2 = raw.split(' & ') if '&' in raw else raw.split(' and ')
         return self._geocode_clean_intersection(street_1, street_2)
     
-    def _geocode_clean_intersection(self, street_1:str, street_2)->Location|None:
+    def _geocode_clean_intersection(self, street_1:str, street_2)->Result[Location]:
         query = f"""
             {self.searchArea}->.searchArea;
             way["highway"]["name"="{street_1}"](area.searchArea)->.w1;
@@ -32,11 +33,15 @@ class CrossStreets:
         """
         results = self.overpass.query(query)
         if results is None:
-            return None
+            return Err(error='Error connecting to overpass server')
+        if not results.nodes():
+            return Err(error='No intersection found')
         else:
+            # TODO handle if multiple nodes are found
             node = results.nodes()[0]
-            return Location(latitude=node.lat(), longitude=node.lon())
+            return Ok(value=Location(latitude=node.lat(), longitude=node.lon()))
 
 if __name__ == "__main__":
     cs = CrossStreets()
     print(cs.geocode('Hennepin Avenue & South 1st Street'))
+    print(cs.geocode('Avenue Hennepin & South 1st Street'))
