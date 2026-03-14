@@ -4,6 +4,7 @@
 setuptools
 wheel
 twine
+pytest
 
 # Should move to setup.py
 pydantic
