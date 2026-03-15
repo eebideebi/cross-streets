@@ -2,7 +2,9 @@ import cross_streets
 
 # import pytest
 
-def test_intialization():
+def test_initialization():
+    assert isinstance(cross_streets.CrossStreets(), cross_streets.CrossStreets)
+
+def test_init_valid_streets():
     streets = cross_streets.CrossStreets()
-    result = streets.geocode('S Hennepin Ave & South 1st St')
-    assert isinstance(result,cross_streets.main.Ok)
+    assert isinstance(streets.valid_streets, set)

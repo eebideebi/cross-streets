@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from OSMPythonTools.overpass import Overpass
 from .error_handling import Result, Ok, Err
 from .street import Street
-from .fuzzy_matching import find_most_similar_street, fetch_streets
+from .fuzzy_matching import fetch_streets
 from functools import cache
 import usaddress 
 
@@ -73,6 +73,7 @@ class CrossStreets:
         return Err(error='No matching intersection found :(')
                     
     def _geocode_clean_intersection(self, street_1:str, street_2: str)->Result[list[Location]]:
+        # TODO: Include city/zip in query
         query = f"""
             {self.searchArea}->.searchArea;
             way["highway"]["name"="{street_1}"](area.searchArea)->.w1;
