@@ -17,8 +17,8 @@ class Location(BaseModel):
 class CrossStreets:
     def __init__(
         self,
-        searchArea:str = 'area(3600136712)', # geocodeArea:Minneapolis
-        overpass_endpoint:str|None = None
+        searchArea: str = 'area(3600136712)', # geocodeArea:Minneapolis
+        overpass_endpoint: str|None = None
     ):
         self.overpass = Overpass(endpoint=overpass_endpoint) if overpass_endpoint else Overpass()
         self.searchArea = searchArea
@@ -34,7 +34,7 @@ class CrossStreets:
            
         return usaddress.tag(raw)[1] == 'Intersection'
     
-    def geocode(self, raw:str, max_attempts: int = 3) -> Ok[Location]|Err:
+    def geocode(self, raw:str, max_attempts: int = 3) -> Ok[list[Location]]|Err:
         if not self.is_intersection(raw):
             return Err(error='This is not an intersection')
 
@@ -64,17 +64,15 @@ class CrossStreets:
                 )
         matches.sort(reverse=True, key=lambda x: x['score'])
         # Try to find a valid geodocing:
-        for i in range(min(len(matches), max_attempts)):
-            m = matches[i]
-            print(m)
-            out = self._geocode_clean_intersection(str(m['street1']), str(m['street2']))
+        for match in matches[:max_attempts]:
+            result = self._geocode_clean_intersection(str(match['street1']), str(match['street2']))
             # Output first valid match
-            if isinstance(out,Ok):
-                return out
+            if isinstance(result,Ok):
+                return result
             
         return Err(error='No matching intersection found :(')
                     
-    def _geocode_clean_intersection(self, street_1:str, street_2: str)->Result[Location]:
+    def _geocode_clean_intersection(self, street_1:str, street_2: str)->Result[list[Location]]:
         query = f"""
             {self.searchArea}->.searchArea;
             way["highway"]["name"="{street_1}"](area.searchArea)->.w1;
@@ -89,9 +87,7 @@ class CrossStreets:
         if not results.nodes():
             return Err(error='No intersection found')
         else:
-            # TODO handle if multiple nodes are found
-            node = results.nodes()[0]
-            return Ok(value=Location(latitude=node.lat(), longitude=node.lon()))
+            return Ok(value=[Location(latitude=node.lat(), longitude=node.lon()) for node in results.nodes()])
 
 if __name__ == "__main__":
     cs = CrossStreets()
