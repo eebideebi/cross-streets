@@ -1,5 +1,39 @@
 import re
-from .insane_type_hashmap import key_to_types
+import functools
+
+_key_to_index: dict[str,int] = {}
+_index_to_types: list[list[str]] = []
+
+def _parse_keys(path: str = 'data/wikipedia_street_types.txt') -> None:
+    ''' ## This function is internal only. Do not call it in code.
+        I beg you, o RAM<br>
+        Just a drop of memory<br>
+        It would quench my thirst<br>'''
+    with open(path,'r') as f:
+        lines = f.readlines()
+    
+    for i in range(len(lines)):
+        line = lines[i].strip().split('->')
+        print(line)
+        forms = [line[0].lower()]
+        
+        if len(line) == 2:
+            forms += [a.lower() for a in line[1].split(',')]
+            
+        for form in forms:
+            _key_to_index[form] = i
+        _index_to_types.append(forms)            
+
+@functools.cache
+def get_types(key: str|None) -> list[str]|None:
+    '''Given a street type (e.g. 'ave'), 
+        return all versions of that type (e.g. ['av', 'avenu', 'avenue'])'''
+    if key is None:
+        return None
+    index = _key_to_index.get(key.lower())
+    if index is None:
+        return None
+    return list(map(lambda x: x.capitalize(),_index_to_types[index]))
 
 class Street:
     name: str # main street name ("Hennepin", etc.)
@@ -26,8 +60,6 @@ class Street:
         self.type = self.long_type(tag.get('StreetNamePreType') if tag.get('StreetNamePreType') else tag.get('StreetNamePostType'))
         self.modifier = tag.get('StreetNamePreModifier') if tag.get('StreetNamePreModifier') else tag.get('StreetNamePostModifier')
         
-        
-    
     def map_direction(self, dir: str|None) -> str|None:
         if dir is None:
             return None
@@ -78,7 +110,7 @@ class Street:
             return None
         
         # TODO: is there a better way to do this?
-        forms = key_to_types(type)
+        forms = get_types(type)
         if forms is None:
             return None
         return forms[0]
@@ -99,7 +131,7 @@ class Street:
         else: 
             m_cfg = [self.name]
         # T -> [M] type | [M]
-        types = key_to_types(self.type)
+        types = get_types(self.type)
         t_cfg = []
         if types:
             for type in types:
@@ -111,8 +143,9 @@ class Street:
         d_cfg = []
         if self.direction:
             for t in t_cfg:
-                d_cfg.append(f'{t} {self.direction}')
-                d_cfg.append(f'{self.direction} {t}')
+                for dir in self.permute_directions():
+                    d_cfg.append(f'{t} {dir}')
+                    d_cfg.append(f'{dir} {t}')
         else: 
             d_cfg = t_cfg
         # [Output D]
@@ -121,6 +154,8 @@ class Street:
 
 if __name__ == '__main__':
     import usaddress
+    # Preprocessing necessary outside package:
+    _parse_keys()
     
     tag = usaddress.tag('Hennepin Ave Southeast')[0]
     street = Street(tag)

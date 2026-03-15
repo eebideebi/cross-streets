@@ -8,7 +8,7 @@ with open('README.md') as f:
 
 setup(
     name='cross_streets',
-    version='0.1.1',
+    version='0.1.2',
     packages=find_packages(),
     install_requires=[
       'pydantic == 2.12',
