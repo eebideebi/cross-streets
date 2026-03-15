@@ -1,6 +1,6 @@
 import cross_streets as cs
 
-import pytest
+# import pytest
 
 def test_intialization():
     streets = cs.CrossStreets()
