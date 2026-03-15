@@ -29,3 +29,6 @@ Ok(value=Location(latitude=44.9837435, longitude=-93.2665678))
 * [Wikipedia Street Types](https://en.wikipedia.org/wiki/Street_suffix)
 
 # TODO List
+- [ ] permutation from written numbers to digits and visa versa
+- [ ] optionally include cities in overpass call
+- [ ] add fallback endpoint

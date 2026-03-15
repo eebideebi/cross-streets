@@ -12,18 +12,20 @@ import pytest
     ]
 )
 def test_geocode_clean_intersection_correct(street_1, street_2, lat, long):
-    cs = CrossStreets(searchArea = 'area(3600136712)')
+    cs = CrossStreets(
+        searchArea = 'area(3600136712)',
+        overpass_endpoint='https://maps.mail.ru/osm/tools/overpass/api/'
+    )
     result = cs._geocode_clean_intersection(street_1, street_2)
     print(result)
     assert isinstance(result, Ok)
-    assert result.value == Location(latitude=lat, longitude=long)
+    assert result.value[0] == Location(latitude=lat, longitude=long)
 
-# def test_geocode_clean_intersection_invalid_overpass_endpoint():
-#     cs = CrossStreets(overpass_endpoint="no endpoint")
-    # result = cs._geocode_clean_intersection("street_1", "street_2")
-    # print(result)
-    # assert isinstance(result, Ok)
-
+def test_geocode_clean_intersection_invalid_overpass_endpoint():
+    with pytest.raises(RuntimeError):
+        cs = CrossStreets(overpass_endpoint="no endpoint")
+        
+        
 @pytest.mark.parametrize(
     "street_1, street_2, lat, long",
     [
@@ -62,4 +64,3 @@ def test_mistyped_query(street_1, street_2, lat, long):
     assert isinstance(result,Ok)
     assert result.value[0].latitude == lat
     assert result.value[0].longitude == long
-    
