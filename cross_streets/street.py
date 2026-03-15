@@ -1,6 +1,6 @@
 from importlib import resources
 from .fuzzy_matching import find_most_similar_street, fetch_streets
-from error_handling import Result, Ok, Err
+from .error_handling import Result, Ok, Err
 import functools
 import re
 

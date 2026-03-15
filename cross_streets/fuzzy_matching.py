@@ -1,5 +1,5 @@
 from OSMPythonTools.overpass import Overpass
-from error_handling import Result, Ok, Err
+from .error_handling import Result, Ok, Err
 import rapidfuzz
 
 def fetch_streets(searchArea, overpass:Overpass)->Result[set[str]]:
