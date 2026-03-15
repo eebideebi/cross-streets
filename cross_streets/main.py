@@ -1,6 +1,9 @@
 from pydantic import BaseModel
 from OSMPythonTools.overpass import Overpass
-from error_handeling import Result, Ok, Err 
+from .error_handling import Result, Ok, Err
+from .street import Street
+import functools
+import usaddress 
 
 # --- Types ---
 
@@ -19,10 +22,27 @@ class CrossStreets:
         self.overpass = Overpass(endpoint=overpass_endpoint) if overpass_endpoint else Overpass()
         self.searchArea = searchArea
 
-    def geocode(self, raw:str)->Result[Location]:
-        street_1, street_2 = raw.split(' & ') if '&' in raw else raw.split(' and ')
-        return self._geocode_clean_intersection(street_1, street_2)
+    @functools.cache
+    def is_intersection(self, raw: str) -> bool:
+        '''Determines whether or not the entered string is an Intersection\n
+           Examples:
+           * `Hennepin Ave S & West Lake Street` &rarr; `True`
+           * `3048 Hennepin Ave` &rarr; `False`'''
+           
+        return usaddress.tag(raw)[1] == 'Intersection'
     
+    def geocode(self, raw:str) -> Location|None:
+        if not self.is_intersection(raw):
+            return None
+
+        tag = usaddress.tag(raw)[0]
+        dict1 = {key:val for key,val in tag.items() if key.startswith('Street')}
+        street1 = Street(dict1)
+        dict2= {key[6:]:val for key,val in tag.items() if key.startswith('Second')}
+        street2 = Street(dict2)
+        # TODO: Finish this!!
+        return Location(latitude=1,longitude=1)
+        
     def _geocode_clean_intersection(self, street_1:str, street_2)->Result[Location]:
         query = f"""
             {self.searchArea}->.searchArea;
