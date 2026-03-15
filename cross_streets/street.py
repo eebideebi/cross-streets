@@ -1,16 +1,23 @@
 import re
 import functools
 
+from importlib import resources
+
+
 _key_to_index: dict[str,int] = {}
 _index_to_types: list[list[str]] = []
 
-def _parse_keys(path: str = 'data/wikipedia_street_types.txt') -> None:
+def _parse_keys(path: str = 'wikipedia_street_types.txt') -> None:
     ''' ## This function is internal only. Do not call it in code.
         I beg you, o RAM<br>
         Just a drop of memory<br>
         It would quench my thirst<br>'''
-    with open(path,'r') as f:
+    
+    with resources.open_text("cross_streets", path) as f:
         lines = f.readlines()
+
+    # with open(path,'r') as f:
+    #     lines = f.readlines()
     
     for i in range(len(lines)):
         line = lines[i].strip().split('->')

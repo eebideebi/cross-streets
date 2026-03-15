@@ -17,5 +17,9 @@ setup(
       'rapidfuzz == 3.14.3'
     ],
     long_description=description,
-    long_description_content_type='text/markdown'
+    long_description_content_type='text/markdown',
+    include_package_data=True,
+    package_data={
+        "cross_streets": ["wikipedia_street_types.txt"],
+    },
 )
