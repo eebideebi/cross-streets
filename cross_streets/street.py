@@ -1,8 +1,6 @@
-import re
-import functools
-
 from importlib import resources
-
+import functools
+import re
 
 _key_to_index: dict[str,int] = {}
 _index_to_types: list[list[str]] = []
