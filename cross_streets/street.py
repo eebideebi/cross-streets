@@ -1,4 +1,6 @@
 from importlib import resources
+from .fuzzy_matching import find_most_similar_street, fetch_streets
+from error_handling import Result, Ok, Err
 import functools
 import re
 
@@ -62,6 +64,7 @@ class Street:
         self.direction = self.map_direction(tag.get('StreetNamePreDirectional') if tag.get('StreetNamePreDirectional') else tag.get('StreetNamePostDirectional'))
         self.type = self.long_type(tag.get('StreetNamePreType') if tag.get('StreetNamePreType') else tag.get('StreetNamePostType'))
         self.modifier = tag.get('StreetNamePreModifier') if tag.get('StreetNamePreModifier') else tag.get('StreetNamePostModifier')
+        self.raw = self.raw_input(tag)
         
     def map_direction(self, dir: str|None) -> str|None:
         if dir is None:
@@ -112,18 +115,38 @@ class Street:
         if type is None:
             return None
         
-        # TODO: is there a better way to do this?
         forms = get_types(type)
         if forms is None:
             return None
         return forms[0]
+    
+    def raw_input(self,tag: dict[str,str]) -> str:
+        '''Reconstruct a (lightly sanitized) version of the input street'''
+        out = tag['StreetName']
+        # Modifier:
+        if tag.get('StreetNamePreModifier'):
+            out = f'{tag['StreetNamePreModifier']} {out}'
+        if tag.get('StreetNamePostModifier'):
+            out = f'{out} {tag['StreetNamePostModifier']}'
+        # Type:
+        if tag.get('StreetNamePreType'):
+            out = f'{tag['StreetNamePreType']} {out}'
+        if tag.get('StreetNamePostType'):
+            out = f'{out} {tag['StreetNamePostType']}'
+        # Direction:
+        if tag.get('StreetNamePreDirectional'):
+            out = f'{tag['StreetNamePreDirectional']} {out}'
+        if tag.get('StreetNamePostDirectional'):
+            out = f'{out} {tag['StreetNamePostDirectional']}'
+        # Output D:
+        return out
     
     def permutations(self) -> list[str]:
         '''### Gets all permutations of the street\n\n
            We use the following CFG under the hood:\n
            N &rarr; name<br>
            M &rarr; modifier [N]] | [N] modifier | [N] <br>
-           T &rarr; [M] type | [M] <br>
+           T &rarr; type [M] |[M] type | [M] <br>
            D &rarr; direction [T] | [T] direction | [T] <br>
            [Output D]
         '''
@@ -133,13 +156,14 @@ class Street:
             m_cfg = [f'{self.modifier} {self.name}', f'{self.name} {self.modifier}']
         else: 
             m_cfg = [self.name]
-        # T -> [M] type | [M]
+        # T -> [M] type | type [M] | [M]
         types = get_types(self.type)
         t_cfg = []
         if types:
             for type in types:
                 for m in m_cfg:
-                    t_cfg.append(f"{m} {type}")
+                    t_cfg.append(f'{m} {type}')
+                    t_cfg.append(f'{type} {m}')
         else:
             t_cfg = m_cfg          
         # D -> direction [T] | [T] direction | [T] <br>
@@ -154,6 +178,14 @@ class Street:
         # [Output D]
         return d_cfg
     
+    def get_best_match(self, valid_streets: set[str]) -> str:
+        '''Gets the best fuzzy-matched street possible for a given string'''
+        matches = [find_most_similar_street(valid_streets,s) for s in self.permutations()]
+        matches = list(filter(None, [s.value if type(s) == Ok else None for s in matches]))
+        # Failsafe: return raw input
+        if len(matches) == 0:
+            return self.raw
+        return str(max(matches, key=lambda x: x['score'])['match'])
 
 if __name__ == '__main__':
     import usaddress
