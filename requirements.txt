@@ -8,3 +8,4 @@ pytest
 pydantic == 2.12
 OSMPythonTools == 0.3.6
 usaddress == 0.5.16
+rapidfuzz == 3.14

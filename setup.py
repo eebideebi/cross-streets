@@ -13,7 +13,8 @@ setup(
     install_requires=[
       'pydantic == 2.12',
       'OSMPythonTools == 0.3.6',
-      'usaddress == 0.5.16'
+      'usaddress == 0.5.16',
+      'rapidfuzz == 3.14'
     ],
     long_description=description,
     long_description_content_type='text/markdown'
