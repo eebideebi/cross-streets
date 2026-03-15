@@ -1,7 +1,8 @@
-import cross_streets as cs
+import cross_streets
 
 # import pytest
 
 def test_intialization():
-    streets = cs.CrossStreets()
-    assert type(streets.geocode('S Hennepin Ave & South 1st St')) == cs.main.Location
+    streets = cross_streets.CrossStreets()
+    result = streets.geocode('S Hennepin Ave & South 1st St')
+    assert isinstance(result,cross_streets.main.Ok)

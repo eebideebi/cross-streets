@@ -34,7 +34,7 @@ class CrossStreets:
            
         return usaddress.tag(raw)[1] == 'Intersection'
     
-    def geocode(self, raw:str) -> Ok[Location]|Err:
+    def geocode(self, raw:str, max_attempts: int = 3) -> Ok[Location]|Err:
         if not self.is_intersection(raw):
             return Err(error='This is not an intersection')
 
@@ -44,16 +44,37 @@ class CrossStreets:
         street1 = Street(dict1)
         dict2= {key[6:]:val for key,val in tag.items() if key.startswith('Second')}
         street2 = Street(dict2)
-        
         # Attempt fuzzy matching:
         if self.valid_streets is None:
             return Err(error='Could not acquire street database')
-        match1 = street1.get_best_match(self.valid_streets)
-        match2 = street2.get_best_match(self.valid_streets)
-                
-        return self._geocode_clean_intersection(match1, match2)
+        candidates1 = street1.get_best_matches(self.valid_streets)
+        candidates2 = street2.get_best_matches(self.valid_streets)
+        # Combine streets to find best composite score:
+        matches: list[dict[str,str|float]] = []
+        for c1 in candidates1:
+            for c2 in candidates2:
+                if c1['match'] == c2['match']: # streets can't be 100% identical
+                    continue
+                matches.append(
+                    {
+                        'street1': c1['match'],
+                        'street2': c2['match'],
+                        'score': float(c1['score']) + float(c2['score'])
+                    }
+                )
+        matches.sort(reverse=True, key=lambda x: x['score'])
+        # Try to find a valid geodocing:
+        for i in range(min(len(matches), max_attempts)):
+            m = matches[i]
+            print(m)
+            out = self._geocode_clean_intersection(str(m['street1']), str(m['street2']))
+            # Output first valid match
+            if isinstance(out,Ok):
+                return out
             
-    def _geocode_clean_intersection(self, street_1:str, street_2)->Result[Location]:
+        return Err(error='No matching intersection found :(')
+                    
+    def _geocode_clean_intersection(self, street_1:str, street_2: str)->Result[Location]:
         query = f"""
             {self.searchArea}->.searchArea;
             way["highway"]["name"="{street_1}"](area.searchArea)->.w1;

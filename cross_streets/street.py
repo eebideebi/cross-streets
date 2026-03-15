@@ -178,14 +178,28 @@ class Street:
         # [Output D]
         return d_cfg
     
-    def get_best_match(self, valid_streets: set[str]) -> str:
+    def get_best_matches(self, valid_streets: set[str]) -> list[dict[str,str|float]]:
         '''Gets the best fuzzy-matched street possible for a given string'''
         matches = [find_most_similar_street(valid_streets,s) for s in self.permutations()]
         matches = list(filter(None, [s.value if type(s) == Ok else None for s in matches]))
+        matches = self._best_permutations(matches)
+        # print(matches)
         # Failsafe: return raw input
         if len(matches) == 0:
-            return self.raw
-        return str(max(matches, key=lambda x: x['score'])['match'])
+            return [{'match': self.raw, 'score': 0}]
+        return [m for m in matches]
+    
+    def _best_permutations(self,permutations: list[dict[str,str|float]]):
+        '''Return a list of unique best matches, sorted by score (descending)'''
+        best = []
+        used: set[str] = set()
+        for p in permutations:
+            if p['match'] in used:
+                continue
+            used.add(str(p['match']))
+            best.append(max(filter(lambda x: x['match']==p['match'],permutations), key=lambda x: float(x['score'])))            
+        return sorted(best, key=lambda x: x['score'], reverse=True)
+                
 
 if __name__ == '__main__':
     import usaddress
