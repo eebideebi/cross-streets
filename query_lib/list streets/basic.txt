@@ -1,0 +1,7 @@
+[out:json][timeout:60];
+
+{{geocodeArea:Minneapolis}}->.searchArea;
+
+way["highway"]["name"](area.searchArea);
+
+out tags;
