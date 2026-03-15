@@ -11,7 +11,9 @@ setup(
     version='0.1.1',
     packages=find_packages(),
     install_requires=[
-      'pydantic >= 2.12'  
+      'pydantic == 2.12',
+      'OSMPythonTools == 0.3.6',
+      'usaddress == 0.5.16'
     ],
     long_description=description,
     long_description_content_type='text/markdown'
