@@ -4,4 +4,4 @@ import cross_streets as cs
 
 def test_intialization():
     streets = cs.CrossStreets()
-    assert type(streets.geocode('test')) == cs.main.Location
+    assert type(streets.geocode('S Hennepin Ave & South 1st St')) == cs.main.Location
