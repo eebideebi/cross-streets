@@ -25,5 +25,7 @@ pip install "$WHL_FILE"
 echo "Running tests..."
 pytest
 
+
+# TO RUN:
 # chmod +x build_and_test.sh
 # ./build_and_test.sh
