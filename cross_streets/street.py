@@ -12,12 +12,10 @@ def _parse_keys(path: str = 'wikipedia_street_types.txt') -> None:
         I beg you, o RAM<br>
         Just a drop of memory<br>
         It would quench my thirst<br>'''
-    
-    with resources.open_text("cross_streets", path) as f:
+            
+    traversable = resources.files('cross_streets').joinpath(path)
+    with traversable.open('r') as f:
         lines = f.readlines()
-
-    # with open(path,'r') as f:
-    #     lines = f.readlines()
     
     for i in range(len(lines)):
         line = lines[i].strip().split('->')
