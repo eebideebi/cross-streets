@@ -17,7 +17,7 @@ def _parse_keys(path: str = 'wikipedia_street_types.txt') -> None:
     
     for i in range(len(lines)):
         line = lines[i].strip().split('->')
-        print(line)
+        # print(line)
         forms = [line[0].lower()]
         
         if len(line) == 2:

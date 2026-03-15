@@ -2,7 +2,8 @@ from pydantic import BaseModel
 from OSMPythonTools.overpass import Overpass
 from .error_handling import Result, Ok, Err
 from .street import Street
-import functools
+
+from functools import cache
 import usaddress 
 
 # --- Types ---
@@ -22,7 +23,7 @@ class CrossStreets:
         self.overpass = Overpass(endpoint=overpass_endpoint) if overpass_endpoint else Overpass()
         self.searchArea = searchArea
 
-    @functools.cache
+    @cache
     def is_intersection(self, raw: str) -> bool:
         '''Determines whether or not the entered string is an Intersection\n
            Examples:
