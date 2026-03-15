@@ -3,8 +3,18 @@ from OSMPythonTools.overpass import Overpass
 from .error_handling import Result, Ok, Err
 from .street import Street
 from .fuzzy_matching import fetch_streets
+from datetime import datetime
 from functools import cache
 import usaddress 
+
+# --- Helper ---
+
+def validate_overpass_endpoint(overpass:Overpass):
+    try:
+        assert overpass.query(f'way["name"="{datetime.now().isoformat()}"]; out body;') is not None
+    except:
+        raise RuntimeError("Overpass endpoint is not responding or invalid.")
+
 
 # --- Types ---
 
@@ -18,9 +28,14 @@ class CrossStreets:
     def __init__(
         self,
         searchArea: str = 'area(3600136712)', # geocodeArea:Minneapolis
-        overpass_endpoint: str|None = None
+        overpass_endpoint: str = 'https://overpass-api.de/api/',
+        overpass_fallback_endpoint:str = 'https://maps.mail.ru/osm/tools/overpass/api/'
     ):
-        self.overpass = Overpass(endpoint=overpass_endpoint) if overpass_endpoint else Overpass()
+        self.overpass = Overpass(endpoint=overpass_endpoint)
+        validate_overpass_endpoint(self.overpass)
+        self.fallback_overpass = Overpass(endpoint=overpass_fallback_endpoint)
+        validate_overpass_endpoint(self.fallback_overpass)
+
         self.searchArea = searchArea
         valid_streets = fetch_streets(self.searchArea,self.overpass)
         self.valid_streets = valid_streets.value if type(valid_streets) == Ok else None
@@ -82,9 +97,21 @@ class CrossStreets:
             (.intersection;);
             out body;
         """
-        results = self.overpass.query(query)
+        
+        results = None
+        try:
+            results = self.overpass.query(query)
+        except:
+            print('Failed to reach main Overpass server.\n\tTrying backup...')
+            try:
+                results = self.fallback_overpass.query(query)
+            except:
+                print('\tFailed to reach backup Overpass server')
+                return Err(error='Failed to connect to main and backup Overpass servers')
+                
+            
         if results is None:
-            return Err(error='Error connecting to overpass server')
+            return Err(error='Overpass has refused the request')
         if not results.nodes():
             return Err(error='No intersection found')
         else:
