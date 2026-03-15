@@ -1,11 +1,10 @@
-
-
-# dev dependencies
+# Dev dependencies
 setuptools
 wheel
 twine
 pytest
 
-# Should move to setup.py
-pydantic
+# Must move to setup.py
+pydantic == 2.12
 OSMPythonTools == 0.3.6
+usaddress == 0.5.16
