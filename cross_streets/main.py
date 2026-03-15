@@ -3,8 +3,18 @@ from OSMPythonTools.overpass import Overpass
 from .error_handling import Result, Ok, Err
 from .street import Street
 from .fuzzy_matching import find_most_similar_street, fetch_streets
+from datetime import datetime
 from functools import cache
 import usaddress 
+
+# --- Helper ---
+
+def validate_overpass_endpoint(overpass:Overpass):
+    try:
+        assert overpass.query(f'way["name"="{datetime.now().isoformat()}"]; out body;') is not None
+    except:
+        raise RuntimeError("Overpass endpoint is not responding or invalid.")
+
 
 # --- Types ---
 
@@ -18,9 +28,12 @@ class CrossStreets:
     def __init__(
         self,
         searchArea: str = 'area(3600136712)', # geocodeArea:Minneapolis
-        overpass_endpoint: str|None = None
+        overpass_endpoint: str = 'https://overpass-api.de/api/',
+        overpass_fallback_endpoint:str = 'https://maps.mail.ru/osm/tools/overpass/api/'
     ):
-        self.overpass = Overpass(endpoint=overpass_endpoint) if overpass_endpoint else Overpass()
+        self.overpass = Overpass(endpoint=overpass_endpoint)
+        validate_overpass_endpoint(self.overpass)
+        # TODO implement fallback
         self.searchArea = searchArea
         valid_streets = fetch_streets(self.searchArea,self.overpass)
         self.valid_streets = valid_streets.value if type(valid_streets) == Ok else None
