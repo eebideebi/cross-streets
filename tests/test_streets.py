@@ -1,4 +1,4 @@
-import cross_streets as cs
+from cross_streets import Street
 import usaddress
 
 import pytest
@@ -6,8 +6,7 @@ import pytest
 # Simple initialization
 class TestInitializationFunctions:
     tag = usaddress.tag('Hennepin Ave Southeast')[0]
-    print(tag)
-    street = cs.Street(tag)
+    street = Street(tag)
 
     def test_init_name(self):
         assert self.street.name == 'Hennepin'    
