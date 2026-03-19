@@ -1,5 +1,5 @@
 from importlib import resources
-from .fuzzy_matching import find_most_similar_street, fetch_streets
+from .fuzzy_matching import find_most_similar_street
 from .error_handling import Result, Ok, Err
 import functools
 import re
@@ -146,7 +146,7 @@ class Street:
            We use the following CFG under the hood:\n
            N &rarr; name<br>
            M &rarr; modifier [N]] | [N] modifier | [N] <br>
-           T &rarr; type [M] |[M] type | [M] <br>
+           T &rarr; type [M] | [M] type | [M] <br>
            D &rarr; direction [T] | [T] direction | [T] <br>
            [Output D]
         '''

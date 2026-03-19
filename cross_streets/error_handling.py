@@ -8,9 +8,15 @@ T = TypeVar("T")
 
 class Ok(BaseModel, Generic[T]):
     value: T
+    
+    def __str__(self):
+        return f'Ok:\n\t{self.value}'
 
 class Err(BaseModel):
     error: str
+    
+    def __str__(self):
+        return f'Err: {self.error}'
 
 type Result[T] = Ok[T] | Err
 

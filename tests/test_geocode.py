@@ -13,8 +13,8 @@ import pytest
 )
 def test_geocode_clean_intersection_correct(street_1, street_2, lat, long):
     cs = CrossStreets(
-        searchArea = 'area(3600136712)',
-        overpass_endpoint='https://maps.mail.ru/osm/tools/overpass/api/'
+        search_area = 'area(3600136712)',
+        endpoints=['https://maps.mail.ru/osm/tools/overpass/api/']
     )
     result = cs._geocode_clean_intersection(street_1, street_2)
     print(result)
@@ -23,7 +23,7 @@ def test_geocode_clean_intersection_correct(street_1, street_2, lat, long):
 
 def test_geocode_clean_intersection_invalid_overpass_endpoint():
     with pytest.raises(RuntimeError):
-        cs = CrossStreets(overpass_endpoint="no endpoint")
+        cs = CrossStreets(endpoints=["invalid endpoint"])
         
         
 @pytest.mark.parametrize(

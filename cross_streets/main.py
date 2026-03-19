@@ -1,8 +1,8 @@
 from pydantic import BaseModel
-from OSMPythonTools.overpass import Overpass
+# from OSMPythonTools.overpass import Overpass
+from .custom_overpass import Overpass, Element
 from .error_handling import Result, Ok, Err
 from .street import Street
-from .fuzzy_matching import fetch_streets
 from datetime import datetime
 from functools import cache
 import usaddress 
@@ -27,18 +27,15 @@ class Location(BaseModel):
 class CrossStreets:
     def __init__(
         self,
-        searchArea: str = 'area(3600136712)', # geocodeArea:Minneapolis
-        overpass_endpoint: str = 'https://overpass-api.de/api/',
-        overpass_fallback_endpoint:str = 'https://maps.mail.ru/osm/tools/overpass/api/'
+        search_area: str = 'area(3600136712)', # geocodeArea:Minneapolis
+        endpoints: list[str] = ['https://overpass-api.de/api/','https://maps.mail.ru/osm/tools/overpass/api/']
     ):
-        self.overpass = Overpass(endpoint=overpass_endpoint)
-        validate_overpass_endpoint(self.overpass)
-        self.fallback_overpass = Overpass(endpoint=overpass_fallback_endpoint)
-        validate_overpass_endpoint(self.fallback_overpass)
-
-        self.searchArea = searchArea
-        valid_streets = fetch_streets(self.searchArea,self.overpass)
-        self.valid_streets = valid_streets.value if type(valid_streets) == Ok else None
+        self.overpass = Overpass(search_area, endpoints)
+        self.overpass.validate()
+        
+        self.search_area = search_area
+        valid_streets = self.overpass.fetch_streets()
+        self.valid_streets = valid_streets.value if isinstance(valid_streets, Ok) else None
 
     @cache
     def is_intersection(self, raw: str) -> bool:
@@ -90,7 +87,7 @@ class CrossStreets:
     def _geocode_clean_intersection(self, street_1:str, street_2: str)->Result[list[Location]]:
         # TODO: Include city/zip in query
         query = f"""
-            {self.searchArea}->.searchArea;
+            {self.search_area}->.searchArea;
             way["highway"]["name"="{street_1}"](area.searchArea)->.w1;
             way["highway"]["name"="{street_2}"](area.searchArea)->.w2; 
             node(w.w1)(w.w2)->.intersection;
@@ -98,24 +95,12 @@ class CrossStreets:
             out body;
         """
         
-        results = None
-        try:
-            results = self.overpass.query(query)
-        except:
-            print('Failed to reach main Overpass server.\n\tTrying backup...')
-            try:
-                results = self.fallback_overpass.query(query)
-            except:
-                print('\tFailed to reach backup Overpass server')
-                return Err(error='Failed to connect to main and backup Overpass servers')
-                
-            
-        if results is None:
-            return Err(error='Overpass has refused the request')
-        if not results.nodes():
-            return Err(error='No intersection found')
-        else:
-            return Ok(value=[Location(latitude=node.lat(), longitude=node.lon()) for node in results.nodes()])
+        results = self.overpass.nodes(query)
+        if isinstance(results, Err):
+            return results
+        
+        nodes = list(filter(lambda x: x.lat and x.long, results.value))
+        return Ok(value=[Location(latitude=node.lat or 0, longitude=node.long or 0) for node in nodes])
 
 if __name__ == "__main__":
     cs = CrossStreets()
